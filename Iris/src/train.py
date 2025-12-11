@@ -1,51 +1,45 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 import mlflow
 import mlflow.sklearn
-import os
+from pathlib import Path
+import joblib
+
+# Paths
+PROJECT_DIR = Path(__file__).resolve().parents[1]
+TRAIN_DATA_PATH = PROJECT_DIR / "data" / "processed" / "train.csv"
+MODEL_DIR = PROJECT_DIR / "models"
 
 def train_and_log_model(C_value=1.0):
-    # 1. Configuración de MLflow para el Experimento
-    # Usaremos el nombre de carpeta del proyecto como nombre del experimento
+    # Crear experimento si no existe
     mlflow.set_experiment("Iris_Logistic_Regression")
 
     with mlflow.start_run():
-        # 2. Carga y preparación de datos (Asumimos que iris.csv existe)
-        data = pd.read_csv(os.path.join("data", "raw", "iris.csv"))
-        
-        X = data.drop(columns=['target'])
-        y = data['target']
-        
-        # 3. División de datos
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        # 1. Cargar datos procesados
+        train_data = pd.read_csv(TRAIN_DATA_PATH)
+        X_train = train_data.drop(columns=["target"])
+        y_train = train_data["target"]
 
-        # 4. Entrenamiento del modelo
+        # 2. Entrenar modelo
         model = LogisticRegression(C=C_value, max_iter=200)
         model.fit(X_train, y_train)
 
-        # 5. Evaluación del modelo
-        predictions = model.predict(X_test)
-        accuracy = accuracy_score(y_test, predictions)
+        # 3. Métrica de entrenamiento
+        train_acc = accuracy_score(y_train, model.predict(X_train))
 
-        # 6. Logging (Registro) de MLOps con MLflow
-        
-        # Registro de Parámetros
+        # 4. Logging con MLflow
         mlflow.log_param("C_regularization", C_value)
-        mlflow.log_param("model_type", "LogisticRegression")
-        
-        # Registro de Métricas
-        mlflow.log_metric("accuracy", accuracy)
-        
-        # Registro del Modelo (Lo guarda en la carpeta mlruns)
-        mlflow.sklearn.log_model(model, "model")
+        mlflow.log_metric("train_accuracy", train_acc)
+        mlflow.sklearn.log_model(model, artifact_path="model")
 
-        print(f"Modelo entrenado con C={C_value}. Precisión: {accuracy:.4f}")
-        print(f"Experimento registrado en MLflow Run ID: {mlflow.active_run().info.run_id}")
+        # 5. Guardar modelo local
+        MODEL_DIR.mkdir(exist_ok=True, parents=True)
+        model_path = MODEL_DIR / "model.pkl"
+        joblib.dump(model, model_path)
+
+        print(f"Modelo entrenado (C={C_value}) y guardado en: {model_path}")
 
 if __name__ == "__main__":
-    # Puedes probar diferentes parámetros aquí
-    train_and_log_model(C_value=0.1)
-    train_and_log_model(C_value=1.0) 
-    train_and_log_model(C_value=10.0)
+    train_and_log_model(C_value=1.0)
+    train_and_log_model(C_value=10)
