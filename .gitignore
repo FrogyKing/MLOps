@@ -1,3 +1,25 @@
+# Sandbox
+sandbox
+sandbox/
+
+# Archivos y carpetas del entorno virtual (VENV)
+venv/
+.venv/
+env/
+.env/
+
+# Archivos de caché de Python
+__pycache__/
+*.pyc
+
+# Archivos de Jupyter Notebook
+.ipynb_checkpoints
+
+# Archivos de datos que se versionan con DVC, NO con Git
+# Estos archivos de datos pueden ser muy pesados.
+# Git solo debe ver el .dvc, no el archivo de datos real.
+mlruns/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
