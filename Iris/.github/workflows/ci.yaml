@@ -1,0 +1,48 @@
+name: MLOps Pipeline Iris
+
+on:
+  push:
+    branches: [ "main", "master" ]
+    # IMPORTANTE: Solo activar si hay cambios en la carpeta Iris
+    paths:
+      - 'Iris/**' 
+
+jobs:
+  train-and-validate:
+    runs-on: ubuntu-latest
+    
+    # --- ESTO ES LO NUEVO ---
+    # Define que todos los comandos 'run' se ejecuten dentro de la carpeta Iris
+    defaults:
+      run:
+        working-directory: ./Iris
+    # ------------------------
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install dvc mlflow
+
+    - name: Run DVC Pipeline
+      run: |
+        dvc repro
+
+    - name: Show Metrics
+      run: |
+        echo "## Métricas del Modelo"
+        cat metrics.json
+
+    - name: Test Docker Build
+      # Docker funciona un poco distinto, hay que pasarle el contexto explícitamente
+      run: |
+        docker build -t iris-app .

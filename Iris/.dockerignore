@@ -1,0 +1,28 @@
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# MLflow y DVC
+mlruns/
+.dvc/
+mlflow.db
+
+# Datos (Docker no debe llevar datos crudos, solo el modelo entrenado)
+data/raw/
+data/processed/
+
+# Notebooks y archivos de desarrollo
+notebooks/
+sandbox/
+.ipynb_checkpoints/
+
+# Git y otros
+.git/
+.gitignore
+.dockerignore
+README.md
+
+# Cache de Python
+**/__pycache__/
+*.py[cod]
